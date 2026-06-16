@@ -9,6 +9,10 @@ export default async function Footer() {
   })
   const productCategories = await listCategories()
 
+  // FIX: Pehle sirf Main Categories filter karein, taaki sub-categories loop ko block na karein
+  const rootCategories =
+    productCategories?.filter((c) => !c.parent_category) || []
+
   return (
     <footer className="border-t border-gray-100 bg-white w-full">
       <div className="content-container flex flex-col w-full">
@@ -57,17 +61,14 @@ export default async function Footer() {
           {/* Links Grid */}
           <div className="text-sm gap-10 md:gap-x-16 grid grid-cols-2 sm:grid-cols-3">
             {/* Categories (Dynamic) */}
-            {productCategories && productCategories?.length > 0 && (
+            {rootCategories.length > 0 && (
               <div className="flex flex-col gap-y-4">
                 <span className="font-semibold text-gray-900 tracking-wide uppercase text-xs">
                   Shop
                 </span>
                 <ul className="grid grid-cols-1 gap-3">
-                  {productCategories?.slice(0, 6).map((c) => {
-                    if (c.parent_category) {
-                      return
-                    }
-
+                  {/* Map over the filtered root categories cleanly up to 10 entries */}
+                  {rootCategories.slice(0, 10).map((c) => {
                     const children =
                       c.category_children?.map((child) => ({
                         name: child.name,
@@ -80,13 +81,16 @@ export default async function Footer() {
                         <LocalizedClientLink
                           className={clx(
                             "text-gray-500 hover:text-berry-primary transition-colors",
-                            children && "font-medium text-gray-700"
+                            children &&
+                              children.length > 0 &&
+                              "font-medium text-gray-700"
                           )}
                           href={`/categories/${c.handle}`}
                         >
                           {c.name}
                         </LocalizedClientLink>
-                        {children && (
+
+                        {children && children.length > 0 && (
                           <ul className="grid grid-cols-1 ml-3 gap-2 mt-1">
                             {children.map((child) => (
                               <li key={child.id}>

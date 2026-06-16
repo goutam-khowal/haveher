@@ -20,7 +20,8 @@ export const listCategories = async (query?: Record<string, unknown>) => {
           ...query,
         },
         next,
-        cache: "force-cache",
+        // CRITICAL FIX: "force-cache" ko hata kar "no-store" lagaya taaki Next.js har baar naya data laaye
+        cache: "no-store", 
       }
     )
     .then(({ product_categories }) => product_categories)
@@ -42,7 +43,8 @@ export const getCategoryByHandle = async (categoryHandle: string[]) => {
           handle,
         },
         next,
-        cache: "force-cache",
+        // CRITICAL FIX: Category pages ke liye bhi lookup dynamic kar diya
+        cache: "no-store", 
       }
     )
     .then(({ product_categories }) => product_categories[0])

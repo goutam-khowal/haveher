@@ -6,7 +6,6 @@ import os from "os";
 import { Resend } from "resend";
 import dotenv from "dotenv";
 
-// Force load project .env keys inside background subscriber threads
 dotenv.config();
 
 export default async function orderPlacedInvoiceHandler({
@@ -41,13 +40,14 @@ export default async function orderPlacedInvoiceHandler({
     order.metadata?.custom_invoice_id || order.id.slice(-8).toUpperCase();
   const invoiceFilename = `invoice-${displayId}.pdf`;
 
-  // FIXED FOR WINDOWS WATCHER CRASH: Route output to absolute machine temp memory
+  // Route output to absolute machine temp memory
   const tempFolder = os.tmpdir();
   const outputPath = path.join(tempFolder, invoiceFilename);
 
   // 2. Local PDF Rendering Pipeline
   const doc = new PDFDocument({ size: "A4", margin: 50 });
   const stream = fs.createWriteStream(outputPath);
+
   doc.pipe(stream);
 
   // Header & Brand Styling (Blush & Berry Accent)
@@ -117,21 +117,23 @@ export default async function orderPlacedInvoiceHandler({
   doc.fillColor("#4B5563").font("Helvetica");
   order.items?.forEach((item: any) => {
     itemY += 25;
+    const itemPriceRaw = Number(item.unit_price);
+    const itemQuantity = Number(item.quantity);
+    const rawPrice = itemPriceRaw > 100000 ? itemPriceRaw / 100 : itemPriceRaw;
+
     doc.text(item.title, 60, itemY, { width: 280, truncate: true });
-    doc.text(item.quantity.toString(), 350, itemY, {
+    doc.text(itemQuantity.toString(), 350, itemY, {
       width: 30,
       align: "center",
     });
-    doc.text(`${(item.unit_price / 100).toFixed(2)}`, 400, itemY, {
+    doc.text(`${rawPrice.toFixed(2)}`, 400, itemY, {
       width: 60,
       align: "right",
     });
-    doc.text(
-      `${((item.unit_price * item.quantity) / 100).toFixed(2)}`,
-      480,
-      itemY,
-      { width: 60, align: "right" },
-    );
+    doc.text(`${(rawPrice * itemQuantity).toFixed(2)}`, 480, itemY, {
+      width: 60,
+      align: "right",
+    });
   });
 
   // Calculation Footers
@@ -144,15 +146,23 @@ export default async function orderPlacedInvoiceHandler({
     .stroke();
 
   itemY += 10;
+  const numSubtotal = Number(order.subtotal);
+  const numShipping = Number(order.shipping_total);
+  const numTotal = Number(order.total);
+
+  const rawSubtotal = numSubtotal > 100000 ? numSubtotal / 100 : numSubtotal;
+  const rawShipping = numShipping > 100000 ? numShipping / 100 : numShipping;
+  const rawTotal = numTotal > 100000 ? numTotal / 100 : numTotal;
+
   doc.font("Helvetica").text("Subtotal:", 350, itemY);
-  doc.text(`INR ${(order.subtotal / 100).toFixed(2)}`, 480, itemY, {
+  doc.text(`INR ${rawSubtotal.toFixed(2)}`, 480, itemY, {
     width: 60,
     align: "right",
   });
 
   itemY += 15;
   doc.text("Shipping:", 350, itemY);
-  doc.text(`INR ${(order.shipping_total / 100).toFixed(2)}`, 480, itemY, {
+  doc.text(`INR ${rawShipping.toFixed(2)}`, 480, itemY, {
     width: 60,
     align: "right",
   });
@@ -163,22 +173,29 @@ export default async function orderPlacedInvoiceHandler({
     .font("Helvetica-Bold")
     .fontSize(11)
     .text("Total Paid Amount:", 320, itemY);
-  doc.text(`INR ${(order.total / 100).toFixed(2)}`, 480, itemY, {
+  doc.text(`INR ${rawTotal.toFixed(2)}`, 480, itemY, {
     width: 60,
     align: "right",
   });
 
   doc.end();
+
+  // CRITICAL: Wait for the file stream to fully finish writing to disk before reading it for the email
+  await new Promise((resolve, reject) => {
+    stream.on("finish", resolve);
+    stream.on("error", reject);
+  });
+
   console.log(
     `[HaveHer Assets] Local invoice PDF built safely in temp storage: ${invoiceFilename}`,
   );
 
-  // 3. SECURE RESEND TRANSACTIONAL EMAIL TRANSMISSION
+  // 3. SECURE RESEND TRANSACTIONAL EMAIL TRANSMISSION WITH ATTACHMENT
   try {
     const resendApiKey = process.env.RESEND_API_KEY;
     if (!resendApiKey) {
       console.warn(
-        "⚠️ [Resend Skip] Missing RESEND_API_KEY inside project environment mapping file.",
+        "⚠️ [Resend Skip] Missing RESEND_API_KEY inside project environment configuration.",
       );
       return;
     }
@@ -186,10 +203,15 @@ export default async function orderPlacedInvoiceHandler({
     const resend = new Resend(resendApiKey);
     const invoiceUrl = order.metadata?.razorpay_invoice_url || "";
     const customerName = order.shipping_address?.first_name || "there";
-    const orderTotalAmount = (order.total / 100).toLocaleString("en-IN", {
+
+    const finalFormattedTotal = rawTotal.toLocaleString("en-IN", {
       style: "currency",
       currency: "INR",
+      maximumFractionDigits: 2,
     });
+
+    // Read the freshly built PDF into memory as a buffer for the attachment payload
+    const pdfBuffer = fs.readFileSync(outputPath);
 
     const emailHtmlPayload = `
       <!DOCTYPE html>
@@ -198,7 +220,7 @@ export default async function orderPlacedInvoiceHandler({
         <meta charset="utf-8">
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background-color: #fcfbfa; color: #1a1a1a; margin: 0; padding: 0; }
-          .wrapper { max-width: 580px; margin: 40px auto; background: #ffffff; border: 1px solid #f0eded; border-radius: 24px; overflow: hidden; }
+          .wrapper { max-width: 580px; margin: 40px auto; background: #ffffff; border: 1px solid #f0eded; border-radius: 24px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
           .header { text-align: center; padding: 40px 20px; background: #fffcfd; border-bottom: 1px solid #fef0f5; }
           .logo { font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #be185d; text-transform: uppercase; text-decoration: none; }
           .content { padding: 40px 32px; }
@@ -207,8 +229,6 @@ export default async function orderPlacedInvoiceHandler({
           .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
           .label { color: #71717a; }
           .value { font-weight: 600; color: #18181b; }
-          .btn-container { text-align: center; margin-top: 32px; }
-          .btn { display: inline-block; background-color: #be185d; color: #ffffff !important; font-weight: 600; font-size: 14px; text-decoration: none; padding: 14px 32px; border-radius: 50px; }
           .footer { text-align: center; padding: 32px 20px; font-size: 12px; color: #a1a1aa; background: #fafafa; border-top: 1px solid #f4f4f5; }
         </style>
       </head>
@@ -218,22 +238,13 @@ export default async function orderPlacedInvoiceHandler({
           <div class="content">
             <div class="greeting">Hi ${customerName},</div>
             <p style="font-size: 14px; line-height: 1.6; color: #4b5563; margin: 0;">
-              Your order has been placed successfully! We are preparing your heritage selection with the utmost care. Here are your purchase details:
+              Your order has been placed successfully! We are preparing your heritage selection with the utmost care. Your official tax invoice has been attached directly to this email.
             </p>
             <div class="infobox">
               <div class="row"><span class="label">Order Reference</span><span class="value" style="color: #be185d;">${displayId}</span></div>
-              <div class="row"><span class="label">Total Amount Paid</span><span class="value">${orderTotalAmount}</span></div>
-              <div class="row"><span class="label">Shipping Destination</span><span class="value">${order.shipping_address?.city || "India"}</span></div>
+              <div class="row"><span class="label">Total Paid</span><span class="value">${finalFormattedTotal}</span></div>
+              <div class="row"><span class="label">Destination</span><span class="value">${order.shipping_address?.city || "India"}</span></div>
             </div>
-            ${
-              invoiceUrl
-                ? `
-              <div class="btn-container">
-                <a href="${invoiceUrl}" target="_blank" class="btn">Download Razorpay Tax Invoice</a>
-              </div>
-            `
-                : ""
-            }
           </div>
           <div class="footer">&copy; ${new Date().getFullYear()} HAVEHER. All Rights Reserved.</div>
         </div>
@@ -241,21 +252,44 @@ export default async function orderPlacedInvoiceHandler({
       </html>
     `;
 
+    // Send the email with the PDF attached
     await resend.emails.send({
       from: "HaveHer <onboarding@resend.dev>",
       to: [order.email],
       subject: `Your HaveHer Order Confirmation - ${displayId}`,
       html: emailHtmlPayload,
+      attachments: [
+        {
+          filename: invoiceFilename,
+          content: pdfBuffer,
+        },
+      ],
     });
 
     console.log(
-      `[Resend Email] Confirmation successfully transmitted to ${order.email}`,
+      `[Resend Email] Confirmation with attached PDF successfully transmitted to ${order.email}`,
     );
   } catch (emailError) {
     console.error(
-      "[Resend System Error] Failed to drop email notification execution:",
+      "[Resend System Error] Failed to complete email transaction execution:",
       emailError,
     );
+  } finally {
+    // --- 4. SECURE AUTO-DELETE PIPELINE ---
+    // The finally block guarantees this file deletion runs whether the email succeeded or failed
+    try {
+      if (fs.existsSync(outputPath)) {
+        fs.unlinkSync(outputPath);
+        console.log(
+          `[HaveHer Assets] Garbage Collection: Temporary local PDF asset (${invoiceFilename}) securely scrubbed from OS partitions.`,
+        );
+      }
+    } catch (cleanupError) {
+      console.error(
+        "[Cleanup Warning] Failed to delete temporary invoice asset file:",
+        cleanupError,
+      );
+    }
   }
 }
 
