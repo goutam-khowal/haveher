@@ -5,14 +5,19 @@ loadEnv(process.env.NODE_ENV || "development", process.cwd());
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
+    // FIX: Production Redis connector map kiya gaya hai background tasks handle karne ke liye
+    redisUrl: process.env.REDIS_URL, 
     http: {
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
       authCors: process.env.AUTH_CORS!,
-      jwtSecret: process.env.JWT_SECRET || "supersecret",
-      cookieSecret: process.env.COOKIE_SECRET || "supersecret",
+      jwtSecret: process.env.JWT_SECRET || "supersecret_haveher_secret",
+      cookieSecret: process.env.COOKIE_SECRET || "supersecret_haveher_cookie_secret",
     },
-    // WatchOptions removed here because we are writing outside the app workspace!
+  },
+  // FIX: Admin panel bundle crash ko bypass karne ke liye config injection apply kiya hai
+  admin: {
+    disable: process.env.NODE_ENV === "production",
   },
   modules: {
     [Modules.FILE]: {
