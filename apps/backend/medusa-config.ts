@@ -5,21 +5,27 @@ loadEnv(process.env.NODE_ENV || "development", process.cwd());
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
-    // FIX: Production Redis connector map kiya gaya hai background tasks handle karne ke liye
-    redisUrl: process.env.REDIS_URL, 
+    redisUrl: process.env.REDIS_URL, // Holds your clean Upstash URL
     http: {
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
       authCors: process.env.AUTH_CORS!,
       jwtSecret: process.env.JWT_SECRET || "supersecret_haveher_secret",
-      cookieSecret: process.env.COOKIE_SECRET || "supersecret_haveher_cookie_secret",
+      cookieSecret:
+        process.env.COOKIE_SECRET || "supersecret_haveher_cookie_secret",
     },
   },
-  // FIX: Admin panel bundle crash ko bypass karne ke liye config injection apply kiya hai
   admin: {
     disable: process.env.NODE_ENV === "production",
   },
   modules: {
+    // FIX: Force Medusa to use Redis Event Bus Module instead of In-Memory Local Bus
+    [Modules.EVENT_BUS]: {
+      resolve: "@medusajs/event-bus-redis",
+      options: {
+        redisUrl: process.env.REDIS_URL,
+      },
+    },
     [Modules.FILE]: {
       resolve: "@medusajs/file",
       options: {
