@@ -16,7 +16,7 @@ module.exports = defineConfig({
     },
   },
   admin: {
-    disable: process.env.NODE_ENV === "production",
+    disable: false,
   },
   modules: {
     // FIX: Force Medusa to use Redis Event Bus Module instead of In-Memory Local Bus
