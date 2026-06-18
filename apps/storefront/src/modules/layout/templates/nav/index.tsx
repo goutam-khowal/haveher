@@ -122,7 +122,7 @@ import { Suspense } from "react"
 import { listLocales } from "@lib/data/locales"
 import { getLocale } from "@lib/data/locale-actions"
 import { listRegions } from "@lib/data/regions"
-import { getCustomer } from "@lib/data/customer" // 👑 INJECTED: Fetch customer validation function
+import { retrieveCustomer } from "@lib/data/customer" // 👑 INJECTED: Fetch customer validation function
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
@@ -136,7 +136,7 @@ export default async function Nav() {
     listRegions().then((regions: StoreRegion[]) => regions),
     listLocales(),
     getLocale(),
-    getCustomer().catch(() => null), // 👑 INJECTED: Safely capture customer session context without throwing errors
+    retrieveCustomer().catch(() => null), // 👑 INJECTED: Safely capture customer session context without throwing errors
   ])
 
   return (
