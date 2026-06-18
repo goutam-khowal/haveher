@@ -136,7 +136,8 @@ import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Thumbnail from "../thumbnail"
 import PreviewPrice from "./price"
-import WishlistButton from "./wishlist-button" // 🌸 INJECTED CLIENT INTERACTIVE ACTION NODE
+import WishlistButton from "./wishlist-button"
+import { retrieveCustomer } from "@lib/data/customer" // 👑 INJECTED: Medusa native session checker
 
 export default async function ProductPreview({
   product,
@@ -147,6 +148,9 @@ export default async function ProductPreview({
   isFeatured?: boolean
   region: HttpTypes.StoreRegion
 }) {
+  // 👑 SESSION VALIDATION: Safely check if the user has an active authenticated session
+  const customer = await retrieveCustomer().catch(() => null)
+
   const { cheapestPrice } = getProductPrice({
     product,
   })
@@ -154,18 +158,25 @@ export default async function ProductPreview({
   return (
     <LocalizedClientLink
       href={`/products/${product.handle}`}
-      className="group block w-full"
+      className="group block w-full text-left"
     >
-      <div data-testid="product-wrapper" className="flex flex-col">
+      <div
+        data-testid="product-wrapper"
+        className="flex flex-col font-sans text-[#3A1A2A]"
+      >
         {/* Image Container with Badges */}
-        <div className="relative w-full aspect-[3/4] bg-white rounded-2xl overflow-hidden mb-3 shadow-sm border border-berry-light/50">
+        <div className="relative w-full aspect-[3/4] bg-white rounded-2xl overflow-hidden mb-3 shadow-sm border border-pink-50/30">
           {/* NEW Badge (Top Left) */}
           <div className="absolute top-3 left-3 z-10 bg-white/95 text-[#D45C88] text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full shadow-sm tracking-wider">
             NEW
           </div>
 
-          {/* 👑 FIXED WISHLIST LINK TOGGLE LAYER: Safe interactive dynamic hook implementation */}
-          {product.id && <WishlistButton productId={product.id} />}
+          {/* =========================================================================
+             👑 FIXED WISHLIST LINK TOGGLE LAYER: 
+             Render the Wishlist interaction layer ONLY if an authenticated customer session exists.
+             If customer is null (Guest), the component stays hidden, avoiding hover layouts entirely.
+             ========================================================================= */}
+          {customer && product.id && <WishlistButton productId={product.id} />}
 
           {/* Product Image */}
           <div className="w-full h-full group-hover:scale-105 transition-transform duration-700 ease-in-out">
@@ -181,12 +192,12 @@ export default async function ProductPreview({
         {/* Product Details (Title & Price) */}
         <div className="flex flex-col gap-1 px-1">
           <Text
-            className="font-sans font-medium text-berry-dark truncate text-sm sm:text-base"
+            className="font-sans font-medium text-gray-800 truncate text-sm sm:text-base group-hover:text-[#D45C88] transition-colors text-left"
             data-testid="product-title"
           >
             {product.title}
           </Text>
-          <div className="font-sans text-berry-primary font-bold text-sm sm:text-base">
+          <div className="font-sans text-[#3A1A2A] font-bold text-sm sm:text-base text-left">
             {cheapestPrice && <PreviewPrice price={cheapestPrice} />}
           </div>
         </div>
