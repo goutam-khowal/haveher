@@ -11,7 +11,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
 import { useRouter } from "next/navigation"
-import { toast } from "sonner" // 🚀 Added for custom high-end toast bypass
+import { toast } from "sonner"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { clx } from "@modules/common/components/ui"
 
@@ -110,9 +110,12 @@ export default function ProductActions({
   const actionsRef = useRef<HTMLDivElement>(null)
   const inView = useIntersection(actionsRef, "0px")
 
-  /* =========================================================================
-     🌸 UPGRADED CART TRIGGER WITH PREMIUM EMBEDDED TOAST SYNC
-     ========================================================================= */
+  const totalProductOptions = product.options?.length || 0
+  const totalSelectedOptions = Object.keys(options).filter(
+    (k) => options[k] !== undefined
+  ).length
+  const hasSelectedAllOptions = totalSelectedOptions === totalProductOptions
+
   const handleAddToCart = async (showNotification = true) => {
     if (!selectedVariant?.id) return null
 
@@ -125,7 +128,6 @@ export default function ProductActions({
         countryCode,
       })
 
-      // 👑 Dynamic Custom Toast Execution (Overriding ugly black box)
       if (showNotification) {
         toast.custom(
           (t) => (
@@ -167,8 +169,14 @@ export default function ProductActions({
     }
   }
 
+  // 👑 FIXED CORE BOOLEAN MAPPING: Removed the rogue exclamation mark so prop handles cleanly
   const isButtonDisabled =
-    !inStock || !selectedVariant || !!disabled || isAdding || !isValidVariant
+    !hasSelectedAllOptions ||
+    !inStock ||
+    !selectedVariant ||
+    !!disabled ||
+    isAdding ||
+    !isValidVariant
 
   return (
     <>
@@ -186,6 +194,7 @@ export default function ProductActions({
                       updateOption={setOptionValue}
                       title={option.title ?? ""}
                       data-testid="product-options"
+                      // 👑 FIXED INTERACTION STATE: Allows active clicks on sizes smoothly
                       disabled={!!disabled || isAdding}
                     />
                   </div>
@@ -205,32 +214,31 @@ export default function ProductActions({
           <button
             onClick={() => handleAddToCart(true)}
             disabled={isButtonDisabled}
-            className="flex-1 px-6 py-4 rounded-full border-2 border-berry-primary bg-white text-berry-primary font-bold tracking-wide hover:bg-berry-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
+            className="flex-1 px-6 py-4 rounded-full border-2 border-berry-primary bg-white text-berry-primary font-bold tracking-wide hover:bg-berry-primary/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
             data-testid="add-product-button"
           >
             {isAdding ? (
               <span className="w-5 h-5 border-2 border-berry-primary border-t-transparent rounded-full animate-spin"></span>
-            ) : !selectedVariant && !options ? (
-              "Select variant"
-            ) : !inStock || !isValidVariant ? (
+            ) : !hasSelectedAllOptions ? (
+              "Select Size 🌸"
+            ) : !selectedVariant || !inStock || !isValidVariant ? (
               "Out of stock"
             ) : (
               "Add to Bag"
             )}
           </button>
 
-          {/* BUY NOW BUTTON - STABLE REDIRECTION FLOW */}
+          {/* BUY NOW BUTTON */}
           <button
             onClick={async () => {
               if (isButtonDisabled) return
-              // Pass false to skip toast alert since we are redirecting straight away
               await handleAddToCart(false)
               if (selectedVariant?.id && inStock) {
                 router.push(`/${countryCode}/checkout`)
               }
             }}
             disabled={isButtonDisabled}
-            className="flex-1 px-6 py-4 rounded-full border-2 border-berry-primary bg-berry-primary text-white font-bold tracking-wide hover:bg-berry-dark hover:border-berry-dark shadow-lg shadow-berry-primary/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
+            className="flex-1 px-6 py-4 rounded-full border-2 border-berry-primary bg-berry-primary text-white font-bold tracking-wide hover:bg-berry-dark hover:border-berry-dark shadow-lg shadow-berry-primary/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
           >
             {isAdding ? (
               <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -246,7 +254,7 @@ export default function ProductActions({
           variant={selectedVariant}
           options={options}
           updateOptions={setOptionValue}
-          inStock={inStock}
+          inStock={inStock && hasSelectedAllOptions}
           handleAddToCart={() => handleAddToCart(true)}
           isAdding={isAdding}
           show={!inView}

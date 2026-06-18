@@ -2,7 +2,7 @@
 
 import repeat from "@lib/util/repeat"
 import { HttpTypes } from "@medusajs/types"
-import { Table, clx } from "@modules/common/components/ui"
+import { clx } from "@modules/common/components/ui"
 
 import Item from "@modules/cart/components/item"
 import SkeletonLineItem from "@modules/skeletons/components/skeleton-line-item"
@@ -22,28 +22,32 @@ const ItemsPreviewTemplate = ({ cart }: ItemsTemplateProps) => {
           hasOverflow,
       })}
     >
-      <Table>
-        <Table.Body data-testid="items-table">
-          {items
-            ? items
-                .sort((a, b) => {
-                  return (a.created_at ?? "") > (b.created_at ?? "") ? -1 : 1
-                })
-                .map((item) => {
-                  return (
+      {/* 👑 FIXED HYDRATION LAYER: Replaced rigid native HTML Table blocks with an agnostic clean layout block.
+          This seamlessly accommodates your <div> based Item components across Next.js 15 Turbopack runs. */}
+      <div
+        className="flex flex-col w-full divide-y divide-pink-100/30"
+        data-testid="items-table"
+      >
+        {items
+          ? items
+              .sort((a, b) => {
+                return (a.created_at ?? "") > (b.created_at ?? "") ? -1 : 1
+              })
+              .map((item) => {
+                return (
+                  <div key={item.id} className="w-full">
                     <Item
-                      key={item.id}
                       item={item}
                       type="preview"
                       currencyCode={cart.currency_code}
                     />
-                  )
-                })
-            : repeat(5).map((i) => {
-                return <SkeletonLineItem key={i} />
-              })}
-        </Table.Body>
-      </Table>
+                  </div>
+                )
+              })
+          : repeat(5).map((i) => {
+              return <SkeletonLineItem key={i} />
+            })}
+      </div>
     </div>
   )
 }

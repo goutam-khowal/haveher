@@ -21,25 +21,37 @@ export default async function Checkout() {
 
   const customer = await retrieveCustomer()
 
+  // Guest checkout fallback bypass rule (Optional, custom handled based on requirements)
   if (!customer) {
     redirect("/account?redirect=/checkout")
   }
 
   return (
     <>
-      {/* Global Branded Navigation Header */}
+      {/* Premium Luxury Navigation Header Bar */}
       <Nav />
 
-      <div className="bg-berry-bg/10 min-h-[80vh] py-12">
-        <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-x-40">
+      {/* 🌸 HaveHer Custom Aligned Theme Canvas Background Layout Wrapper */}
+      <div className="bg-[#FAF4F6] min-h-screen py-12 font-sans">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 content-container">
+          {/* 👑 MASTER INTEGRATION SYNC LAYER: Wrapping the entire checkout grid matrix inside the dynamic provider context boundary block to avoid missing states across summaries */}
           <PaymentWrapper cart={cart}>
-            <CheckoutForm cart={cart} customer={customer} />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-x-12 gap-y-10 items-start">
+              {/* LEFT COLUMN: CONTROL ACTIVE FORMS MATRIX PANEL (7/12 layout grid weight) */}
+              <div className="lg:col-span-7 space-y-6">
+                <CheckoutForm cart={cart} customer={customer} />
+              </div>
+
+              {/* RIGHT COLUMN: RE-STABILIZED COMPACT SIDEBAR RENDER STACK (5/12 layout grid weight) */}
+              <div className="lg:col-span-5 lg:sticky lg:top-8">
+                <CheckoutSummary cart={cart} />
+              </div>
+            </div>
           </PaymentWrapper>
-          <CheckoutSummary cart={cart} />
         </div>
       </div>
 
-      {/* Global Branded Footer */}
+      {/* Global Brand Footer Layer */}
       <Footer />
     </>
   )

@@ -5,7 +5,7 @@ loadEnv(process.env.NODE_ENV || "development", process.cwd());
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
-    redisUrl: process.env.REDIS_URL, // Holds your clean Upstash URL
+    redisUrl: process.env.REDIS_URL,
     http: {
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
@@ -19,7 +19,6 @@ module.exports = defineConfig({
     disable: process.env.NODE_ENV === "production",
   },
   modules: {
-    // FIX: Force Medusa to use Redis Event Bus Module instead of In-Memory Local Bus
     [Modules.EVENT_BUS]: {
       resolve: "@medusajs/event-bus-redis",
       options: {
@@ -56,9 +55,25 @@ module.exports = defineConfig({
             resolve: "@devx-commerce/razorpay/providers/payment-razorpay",
             id: "razorpay",
             options: {
-              key_id: process.env.RAZORPAY_ID,
-              key_secret: process.env.RAZORPAY_SECRET,
-              webhook_secret: process.env.RAZORPAY_WEBHOOK_SECRET,
+              key_id: process.env.RAZORPAY_ID || "rzp_test_T32p4x9a5fuR4e",
+              key_secret:
+                process.env.RAZORPAY_SECRET || "zN2ujmPYkMkfAwhYqaUHms7y",
+              webhook_secret:
+                process.env.RAZORPAY_WEBHOOK_SECRET ||
+                "haveher_super_secret_webhook_string",
+              auto_capture: true,
+            },
+          },
+          {
+            resolve: "@devx-commerce/razorpay/providers/payment-razorpay",
+            id: "pp_razorpay_razorpay",
+            options: {
+              key_id: process.env.RAZORPAY_ID || "rzp_test_T32p4x9a5fuR4e",
+              key_secret:
+                process.env.RAZORPAY_SECRET || "zN2ujmPYkMkfAwhYqaUHms7y",
+              webhook_secret:
+                process.env.RAZORPAY_WEBHOOK_SECRET ||
+                "haveher_super_secret_webhook_string",
               auto_capture: true,
             },
           },

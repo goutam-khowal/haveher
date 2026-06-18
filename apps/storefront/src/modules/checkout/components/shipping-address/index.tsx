@@ -1,3 +1,5 @@
+"use client"
+
 import { HttpTypes } from "@medusajs/types"
 import { Container } from "@modules/common/components/ui"
 import Checkbox from "@modules/common/components/checkbox"
@@ -36,7 +38,6 @@ const ShippingAddress = ({
     [cart?.region]
   )
 
-  // check if customer has saved addresses that are in the current region
   const addressesInRegion = useMemo(
     () =>
       customer?.addresses.filter(
@@ -73,7 +74,6 @@ const ShippingAddress = ({
   }
 
   useEffect(() => {
-    // Ensure cart is not null and has a shipping_address before setting form data
     if (cart && cart.shipping_address) {
       setFormAddress(cart?.shipping_address, cart?.email)
     }
@@ -81,7 +81,7 @@ const ShippingAddress = ({
     if (cart && !cart.email && customer?.email) {
       setFormAddress(undefined, customer.email)
     }
-  }, [cart]) // Add cart as a dependency
+  }, [cart])
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -205,12 +205,14 @@ const ShippingAddress = ({
           required
           data-testid="shipping-email-input"
         />
+        {/* 👑 LOCKED MANDATORY: Added validation layers to enforce mobile input tracks */}
         <Input
           label="Phone"
           name="shipping_address.phone"
           autoComplete="tel"
           value={formData["shipping_address.phone"]}
           onChange={handleChange}
+          required={true} // Injected gate block requirement
           data-testid="shipping-phone-input"
         />
       </div>

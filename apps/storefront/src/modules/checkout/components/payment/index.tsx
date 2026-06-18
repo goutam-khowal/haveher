@@ -5,17 +5,9 @@ import { isStripeLike, paymentInfoMap } from "@lib/constants"
 import { initiatePaymentSession } from "@lib/data/cart"
 import { CheckCircleSolid, CreditCard } from "@medusajs/icons"
 import ErrorMessage from "@modules/checkout/components/error-message"
-import PaymentContainer, {
-  StripeCardContainer,
-} from "@modules/checkout/components/payment-container"
+import PaymentContainer from "@modules/checkout/components/payment-container"
 import Divider from "@modules/common/components/divider"
-import {
-  Button,
-  Container,
-  Heading,
-  Text,
-  clx,
-} from "@modules/common/components/ui"
+import { Button, Heading, Text, clx } from "@modules/common/components/ui"
 import { HttpTypes } from "@medusajs/types"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
@@ -33,8 +25,6 @@ const Payment = ({
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [cardBrand, setCardBrand] = useState<string | null>(null)
-  const [cardComplete, setCardComplete] = useState(false)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
     activeSession?.provider_id ?? ""
   )
@@ -44,54 +34,12 @@ const Payment = ({
   const pathname = usePathname()
 
   const isOpen = searchParams.get("step") === "payment"
-
-  // Upgraded to act as our core server metadata synchronization hub
-  const setPaymentMethod = async (method: string) => {
-    setError(null)
-    setSelectedPaymentMethod(method)
-
-    try {
-      if (method.includes("razorpay")) {
-        // Force sync payload fields down to the Razorpay Merchant core session
-        await initiatePaymentSession(cart, {
-          provider_id: method,
-          data: {
-            metadata: {
-              brand: "HaveHer",
-              cart_id: cart.id,
-              customer_email: cart.email,
-              customer_phone: cart.billing_address?.phone || "9876543210",
-            },
-          },
-        })
-      } else {
-        // Standard session initialization for fallback frameworks (Stripe/Manual Testing)
-        await initiatePaymentSession(cart, {
-          provider_id: method,
-        })
-      }
-    } catch (err) {
-      console.error("Failed to synchronize session parameters:", err)
-      setError("Unable to initialize gateway connection. Please try again.")
-    }
-  }
-
-  const paidByGiftcard = !!(
-    (cart as unknown as Record<string, unknown>)?.gift_cards &&
-    ((cart as unknown as Record<string, unknown>)?.gift_cards as unknown[])
-      ?.length > 0 &&
-    cart?.total === 0
-  )
-
-  const paymentReady =
-    (activeSession && (cart?.shipping_methods?.length ?? 0) !== 0) ||
-    paidByGiftcard
+  const paymentReady = !!activeSession
 
   const createQueryString = useCallback(
     (name: string, value: string) => {
       const params = new URLSearchParams(searchParams)
       params.set(name, value)
-
       return params.toString()
     },
     [searchParams]
@@ -103,41 +51,55 @@ const Payment = ({
     })
   }
 
-  const handleSubmit = async () => {
-    setIsLoading(true)
+  const setPaymentMethod = async (method: string) => {
+    setError(null)
+    setSelectedPaymentMethod(method)
     try {
-      const shouldInputCard =
-        isStripeLike(selectedPaymentMethod) && !activeSession
+      await initiatePaymentSession(cart, {
+        provider_id: method,
+        data: {
+          metadata: {
+            brand: "HaveHer",
+            cart_id: cart.id,
+            customer_email: cart.email,
+            customer_phone: cart.billing_address?.phone || "8700998068",
+          },
+        },
+      })
+    } catch (err) {
+      console.error("Failed to synchronize session parameters:", err)
+    }
+  }
 
+  const handleSubmit = async () => {
+    const targetMethod =
+      selectedPaymentMethod || availablePaymentMethods?.[0]?.id || "razorpay"
+    setIsLoading(true)
+    setError(null)
+    try {
+      const isBothRazorpay =
+        activeSession?.provider_id?.includes("razorpay") &&
+        targetMethod.includes("razorpay")
       const checkActiveSession =
-        activeSession?.provider_id === selectedPaymentMethod
+        activeSession?.provider_id === targetMethod || isBothRazorpay
 
       if (!checkActiveSession) {
-        // Mirror metadata generation parameters safely inside the continuous submit phase fallback
-        const sessionPayload: any = { provider_id: selectedPaymentMethod }
-
-        if (selectedPaymentMethod.includes("razorpay")) {
-          sessionPayload.data = {
+        await initiatePaymentSession(cart, {
+          provider_id: targetMethod,
+          data: {
             metadata: {
               brand: "HaveHer",
               cart_id: cart.id,
               customer_email: cart.email,
-              customer_phone: cart.billing_address?.phone || "9876543210",
+              customer_phone: cart.billing_address?.phone || "8700998068",
             },
-          }
-        }
-
-        await initiatePaymentSession(cart, sessionPayload)
+          },
+        })
       }
 
-      if (!shouldInputCard) {
-        return router.push(
-          pathname + "?" + createQueryString("step", "review"),
-          {
-            scroll: false,
-          }
-        )
-      }
+      return router.push(pathname + "?" + createQueryString("step", "review"), {
+        scroll: false,
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -145,17 +107,28 @@ const Payment = ({
     }
   }
 
+  // 🌸 AUTO-LOAD PRE-SELECT ENFORCER
   useEffect(() => {
-    setError(null)
-  }, [isOpen])
+    if (isOpen && availablePaymentMethods?.length) {
+      const razorpayMethod = availablePaymentMethods.find((m) =>
+        m.id.includes("razorpay")
+      )
+      const targetId = razorpayMethod
+        ? razorpayMethod.id
+        : availablePaymentMethods[0].id
+      if (!selectedPaymentMethod) {
+        setSelectedPaymentMethod(targetId)
+      }
+    }
+  }, [isOpen, availablePaymentMethods, selectedPaymentMethod])
 
   return (
-    <div className="bg-white">
+    <div className="bg-white font-sans text-[#3A1A2A]">
       <div className="flex flex-row items-center justify-between mb-6">
         <Heading
           level="h2"
           className={clx(
-            "flex flex-row text-3xl-regular gap-x-2 items-baseline",
+            "flex flex-row text-3xl-regular gap-x-2 items-baseline text-[#3A1A2A]",
             {
               "opacity-50 pointer-events-none select-none":
                 !isOpen && !paymentReady,
@@ -163,64 +136,48 @@ const Payment = ({
           )}
         >
           Payment
-          {!isOpen && paymentReady && <CheckCircleSolid />}
+          {!isOpen && paymentReady && (
+            <CheckCircleSolid className="text-[#D45C88]" />
+          )}
         </Heading>
         {!isOpen && paymentReady && (
           <Text>
             <button
               onClick={handleEdit}
-              className="text-ui-fg-interactive hover:text-ui-fg-interactive-hover"
-              data-testid="edit-payment-button"
+              className="text-[#D45C88] hover:text-[#3A1A2A] font-semibold transition-colors cursor-pointer"
             >
               Edit
             </button>
           </Text>
         )}
       </div>
+
       <div>
         <div className={isOpen ? "block" : "hidden"}>
-          {!paidByGiftcard && availablePaymentMethods?.length && (
-            <>
-              <RadioGroup
-                value={selectedPaymentMethod}
-                onChange={(value: string) => setPaymentMethod(value)}
-              >
-                {availablePaymentMethods.map((paymentMethod) => (
-                  <div key={paymentMethod.id}>
-                    {isStripeLike(paymentMethod.id) ? (
-                      <StripeCardContainer
-                        paymentProviderId={paymentMethod.id}
-                        selectedPaymentOptionId={selectedPaymentMethod}
-                        paymentInfoMap={paymentInfoMap}
-                        setCardBrand={setCardBrand}
-                        setError={setError}
-                        setCardComplete={setCardComplete}
-                      />
-                    ) : (
-                      <PaymentContainer
-                        paymentInfoMap={paymentInfoMap}
-                        paymentProviderId={paymentMethod.id}
-                        selectedPaymentOptionId={selectedPaymentMethod}
-                      />
-                    )}
+          {availablePaymentMethods?.length && (
+            <RadioGroup
+              value={selectedPaymentMethod || availablePaymentMethods[0].id}
+              onChange={(value: string) => setPaymentMethod(value)}
+            >
+              {availablePaymentMethods.map((paymentMethod) => (
+                <div key={paymentMethod.id} className="mb-2 cursor-pointer">
+                  <div className="flex items-center justify-between p-4 border border-pink-200 rounded-xl bg-pink-50/20 shadow-3xs">
+                    <div className="flex items-center gap-x-3">
+                      <div className="h-4 w-4 rounded-full border-2 border-[#D45C88] flex items-center justify-center bg-white">
+                        <div className="h-2 w-2 rounded-full bg-[#D45C88]"></div>
+                      </div>
+                      <span className="text-sm font-semibold text-[#3A1A2A]">
+                        Razorpay Secure Checkout{" "}
+                        <span className="text-xs text-gray-400 font-normal">
+                          (Cards, UPI, NetBanking, Wallets)
+                        </span>
+                      </span>
+                    </div>
+                    <span className="text-lg">💳</span>
                   </div>
-                ))}
-              </RadioGroup>
-            </>
-          )}
-
-          {paidByGiftcard && (
-            <div className="flex flex-col w-1/3">
-              <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                Payment method
-              </Text>
-              <Text
-                className="txt-medium text-ui-fg-subtle"
-                data-testid="payment-method-summary"
-              >
-                Gift card
-              </Text>
-            </div>
+                </div>
+              ))}
+            </RadioGroup>
           )}
 
           <ErrorMessage
@@ -228,75 +185,34 @@ const Payment = ({
             data-testid="payment-method-error-message"
           />
 
+          {/* 👑 FORCED ACTIVE BUTTON: Locked onto luxury branding accent color palette, ready to hit */}
           <Button
             size="large"
-            className="mt-6"
+            className="mt-6 bg-[#3A1A2A] hover:bg-[#D45C88] text-white rounded-full transition-all h-12 uppercase tracking-widest text-xs font-bold w-full md:w-auto px-8 cursor-pointer shadow-md"
             onClick={handleSubmit}
             isLoading={isLoading}
-            disabled={
-              (isStripeLike(selectedPaymentMethod) && !cardComplete) ||
-              (!selectedPaymentMethod && !paidByGiftcard)
-            }
-            data-testid="submit-payment-button"
+            disabled={isLoading}
           >
-            {!activeSession && isStripeLike(selectedPaymentMethod)
-              ? " Enter card details"
-              : "Continue to review"}
+            Continue to Review
           </Button>
         </div>
 
         <div className={isOpen ? "hidden" : "block"}>
-          {cart && paymentReady && activeSession ? (
-            <div className="flex items-start gap-x-1 w-full">
-              <div className="flex flex-col w-1/3">
-                <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                  Payment method
+          {paymentReady && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full text-left">
+              <div className="flex flex-col min-w-0">
+                <Text className="txt-medium-plus font-bold text-gray-400 uppercase tracking-wider text-[11px] mb-2">
+                  Payment Method
                 </Text>
-                <Text
-                  className="txt-medium text-ui-fg-subtle"
-                  data-testid="payment-method-summary"
-                >
-                  {paymentInfoMap[activeSession?.provider_id]?.title ||
-                    activeSession?.provider_id}
+                <Text className="txt-medium font-semibold text-[#3A1A2A]">
+                  Razorpay Secure Checkout
                 </Text>
               </div>
-              <div className="flex flex-col w-1/3">
-                <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                  Payment details
-                </Text>
-                <div
-                  className="flex gap-2 txt-medium text-ui-fg-subtle items-center"
-                  data-testid="payment-details-summary"
-                >
-                  <Container className="flex items-center h-7 w-fit p-2 bg-ui-button-neutral-hover">
-                    {paymentInfoMap[selectedPaymentMethod]?.icon || (
-                      <CreditCard />
-                    )}
-                  </Container>
-                  <Text>
-                    {isStripeLike(selectedPaymentMethod) && cardBrand
-                      ? cardBrand
-                      : "Another step will appear"}
-                  </Text>
-                </div>
-              </div>
             </div>
-          ) : paidByGiftcard ? (
-            <div className="flex flex-col w-1/3">
-              <Text className="txt-medium-plus text-ui-fg-base mb-1">
-                Payment method
-              </Text>
-              <Text
-                className="txt-medium text-ui-fg-subtle"
-                data-testid="payment-method-summary"
-              >
-                Gift card
-              </Text>
-            </div>
-          ) : null}
+          )}
         </div>
       </div>
-      <Divider className="mt-8" />
+      <Divider className="mt-8 border-pink-50/50" />
     </div>
   )
 }
