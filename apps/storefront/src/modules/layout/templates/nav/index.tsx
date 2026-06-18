@@ -122,25 +122,26 @@ import { Suspense } from "react"
 import { listLocales } from "@lib/data/locales"
 import { getLocale } from "@lib/data/locale-actions"
 import { listRegions } from "@lib/data/regions"
+import { getCustomer } from "@lib/data/customer" // 👑 INJECTED: Fetch customer validation function
 import { StoreRegion } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CartButton from "@modules/layout/components/cart-button"
 import SideMenu from "@modules/layout/components/side-menu"
 import Image from "next/image"
 import NavLikesCounter from "@modules/layout/components/nav-likes-counter"
-import AnnouncementMarquee from "@modules/layout/components/announcement-marquee" // 👑 INJECTED
+import AnnouncementMarquee from "@modules/layout/components/announcement-marquee"
 
 export default async function Nav() {
-  const [regions, locales, currentLocale] = await Promise.all([
+  const [regions, locales, currentLocale, customer] = await Promise.all([
     listRegions().then((regions: StoreRegion[]) => regions),
     listLocales(),
     getLocale(),
+    getCustomer().catch(() => null), // 👑 INJECTED: Safely capture customer session context without throwing errors
   ])
 
   return (
-    // Outer wrap maintains fixed view layers cleanly
     <div className="sticky top-0 inset-x-0 z-50 group flex flex-col w-full">
-      {/* 👑 REGULATION 8 MARQUEE BANNER: Mounted at the absolute top point above header content grid */}
+      {/* REGULATION 8 MARQUEE BANNER */}
       <AnnouncementMarquee />
 
       <header className="relative h-20 mx-auto border-b bg-white border-pink-50/50 shadow-2xs duration-200 w-full">
@@ -175,7 +176,7 @@ export default async function Nav() {
             </LocalizedClientLink>
           </div>
 
-          {/* RIGHT SIDE: Action Bars */}
+          {/* RIGHT SIDE: Action Bars & Triggers Grid */}
           <div className="flex items-center gap-x-4 sm:gap-x-6 h-full flex-1 basis-0 justify-end">
             <div className="hidden small:flex items-center gap-x-6 h-full">
               <LocalizedClientLink
@@ -194,30 +195,34 @@ export default async function Nav() {
               </LocalizedClientLink>
             </div>
 
-            {/* NAVBAR WISHLIST ICON */}
-            <LocalizedClientLink
-              href="/account/wishlist"
-              className="relative p-2 text-gray-700 hover:text-[#D45C88] transition-colors flex items-center justify-center transform active:scale-95"
-              aria-label="View favorites"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-5 h-5"
+            {/* =========================================================================
+               👑 REFINED NAVBAR WISHLIST ICON MASK: Render ONLY if the user is authenticated (customer !== null)
+               ========================================================================= */}
+            {customer && (
+              <LocalizedClientLink
+                href="/account/wishlist"
+                className="relative p-2 text-gray-700 hover:text-[#D45C88] transition-colors flex items-center justify-center transform active:scale-95"
+                aria-label="View favorites"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                />
-              </svg>
-              <div className="absolute -top-0.5 -right-0.5">
-                <NavLikesCounter />
-              </div>
-            </LocalizedClientLink>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+                  />
+                </svg>
+                <div className="absolute -top-0.5 -right-0.5">
+                  <NavLikesCounter />
+                </div>
+              </LocalizedClientLink>
+            )}
 
             {/* Medusa Cart Actions Module */}
             <Suspense
