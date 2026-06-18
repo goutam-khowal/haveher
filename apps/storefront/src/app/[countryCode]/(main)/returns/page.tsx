@@ -59,10 +59,10 @@ export default function ReturnsPage() {
         <p>
           To start your validation log, simply access your personal HaveHer dashboard panel, navigate straight into order details tracking history, and check "Request Return". Alternatively, connect with our fashion concierge team via email at{" "}
           <a
-            href="mailto:concierge@haveher.com"
+            href="mailto:concierge@haveher.in"
             className="text-[#D45C88] hover:text-[#3A1A2A] font-bold underline underline-offset-4 transition-colors"
           >
-            concierge@haveher.com
+            concierge@haveher.in
           </a>{" "}
           including your Order ID along with your raw product verification video clip.
         </p>

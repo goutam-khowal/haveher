@@ -115,7 +115,7 @@ export default function ContactPage() {
       <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 text-center text-sm border-t border-gray-100 pt-8 text-gray-600">
         <div>
           <h4 className="font-semibold text-gray-900">Email Support</h4>
-          <p className="mt-1 text-gray-500">support@haveher.com</p>
+          <p className="mt-1 text-gray-500">support@haveher.in</p>
         </div>
         <div>
           <h4 className="font-semibold text-gray-900">Response Window</h4>

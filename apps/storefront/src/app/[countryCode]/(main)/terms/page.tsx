@@ -71,10 +71,10 @@ export default function TermsPage() {
         <p>
           Questions about the Terms of Service should be sent to us at{" "}
           <a
-            href="mailto:legal@haveher.com"
+            href="mailto:legal@haveher.in"
             className="text-berry-primary hover:text-berry-dark font-medium underline underline-offset-4"
           >
-            legal@haveher.com
+            legal@haveher.in
           </a>
           .
         </p>

@@ -57,7 +57,7 @@ export default function PrivacyPage() {
           For explicit queries regarding data extraction, modification, or
           removal requests, contact our administration teams via email at{" "}
           <span className="text-berry-primary font-medium">
-            privacy@haveher.com
+            privacy@haveher.in
           </span>
           .
         </p>

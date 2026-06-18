@@ -68,7 +68,7 @@ export default async function orderPlacedInvoiceHandler({
     .fontSize(9)
     .text("HaveHer Fashion Ltd.", 50, 80)
     .text("New Delhi, Delhi, India", 50, 95)
-    .text("support@haveher.com", 50, 110);
+    .text("support@haveher.in", 50, 110);
 
   doc
     .fillColor("#111827")
@@ -224,7 +224,7 @@ export default async function orderPlacedInvoiceHandler({
     `;
 
     // FIX: String matching execution matrix block mapping applied to ensure email is never null
-    const finalDestinationEmail = order.email || "support@haveher.com";
+    const finalDestinationEmail = order.email || "support@haveher.in";
 
     await resend.emails.send({
       from: "HaveHer <onboarding@resend.dev>",
