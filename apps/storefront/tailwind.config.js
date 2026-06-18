@@ -1,4 +1,5 @@
 const path = require("path")
+const plugin = require("tailwindcss/plugin") // 🚀 Added to inject global component overrides
 
 module.exports = {
   darkMode: "class",
@@ -29,7 +30,6 @@ module.exports = {
           accent: "#F4A030",
         },
       },
-
       borderRadius: {
         none: "0px",
         soft: "2px",
@@ -54,8 +54,8 @@ module.exports = {
         "3xl": "2rem",
       },
       fontFamily: {
-        sans: ["var(--font-dm-sans)", "sans-serif"],
-        serif: ["var(--font-playfair)", "serif"],
+        sans: ["Montserrat", "sans-serif"],
+        serif: ["Bodoni Moda", "serif"],
       },
       keyframes: {
         ring: {
@@ -63,52 +63,27 @@ module.exports = {
           "100%": { transform: "rotate(360deg)" },
         },
         "fade-in-right": {
-          "0%": {
-            opacity: "0",
-            transform: "translateX(10px)",
-          },
-          "100%": {
-            opacity: "1",
-            transform: "translateX(0)",
-          },
+          "0%": { opacity: "0", transform: "translateX(10px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
         },
         "fade-in-top": {
-          "0%": {
-            opacity: "0",
-            transform: "translateY(-10px)",
-          },
-          "100%": {
-            opacity: "1",
-            transform: "translateY(0)",
-          },
+          "0%": { opacity: "0", transform: "translateY(-10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
         },
         "fade-out-top": {
-          "0%": {
-            height: "100%",
-          },
-          "99%": {
-            height: "0",
-          },
-          "100%": {
-            visibility: "hidden",
-          },
+          "0%": { height: "100%" },
+          "99%": { height: "0" },
+          "100%": { visibility: "hidden" },
         },
         "accordion-slide-up": {
           "0%": {
             height: "var(--radix-accordion-content-height)",
             opacity: "1",
           },
-          "100%": {
-            height: "0",
-            opacity: "0",
-          },
+          "100%": { height: "0", opacity: "0" },
         },
         "accordion-slide-down": {
-          "0%": {
-            "min-height": "0",
-            "max-height": "0",
-            opacity: "0",
-          },
+          "0%": { "min-height": "0", "max-height": "0", opacity: "0" },
           "100%": {
             "min-height": "var(--radix-accordion-content-height)",
             "max-height": "none",
@@ -145,5 +120,35 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-radix")()],
+  plugins: [
+    require("tailwindcss-radix")(),
+
+    // 👑 THE ULTIMATE SINGLE-ACTION GLOBAL SPACE OVERRIDE
+    plugin(function ({ addComponents }) {
+      addComponents({
+        /* 1. Shrink excessive gaps on all template pages (Cart, Checkout, Layout Containers) */
+        ".content-container": {
+          width: "100%",
+          maxWidth: "1280px",
+          marginLeft: "auto",
+          marginRight: "auto",
+          paddingLeft: "1rem !important", // Reduced mobile space padding
+          paddingRight: "1rem !important",
+          paddingTop: "1.5rem !important", // Shrunk massive top section whitespace
+          paddingBottom: "1.5rem !important",
+          "@screen small": {
+            paddingLeft: "2rem !important", // Beautiful compact laptop structure
+            paddingRight: "2rem !important",
+            paddingTop: "2.5rem !important",
+          },
+        },
+        /* 2. Direct core target to clean Medusa's native padded layout layers */
+        '[data-testid="cart-container"], [data-testid="product-container"]': {
+          paddingTop: "1.5rem !important",
+          paddingBottom: "1.5rem !important",
+          gap: "1.5rem !important", // Compresses wide gaps between item blocks
+        },
+      })
+    }),
+  ],
 }

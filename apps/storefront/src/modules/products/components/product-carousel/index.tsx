@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef } from "react"
+import React, { useRef, useState, useEffect } from "react"
 import Image from "next/image"
 
 type ImageCarouselProps = {
@@ -9,6 +9,24 @@ type ImageCarouselProps = {
 
 export default function ProductImageCarousel({ images }: ImageCarouselProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  // Track active index on swipe touch (Mobile optimized)
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      const { scrollLeft, clientWidth } = container
+      if (clientWidth > 0) {
+        const newIndex = Math.round(scrollLeft / clientWidth)
+        setActiveIndex(newIndex)
+      }
+    }
+
+    container.addEventListener("scroll", handleScroll, { passive: true })
+    return () => container.removeEventListener("scroll", handleScroll)
+  }, [images])
 
   const scroll = (direction: "left" | "right") => {
     if (scrollContainerRef.current) {
@@ -51,10 +69,12 @@ export default function ProductImageCarousel({ images }: ImageCarouselProps) {
         </>
       )}
 
-      {/* FLUID HORIZONTAL CAROUSEL CONTAINER */}
+      {/* 🚀 FIXED HORIZONTAL CAROUSEL CONTAINER 
+          Changed 'overflow-x-hidden' to 'overflow-x-auto' + 'touch-pan-x'
+      */}
       <div
         ref={scrollContainerRef}
-        className="flex w-full overflow-x-hidden snap-x snap-mandatory scroll-smooth rounded-2xl border border-gray-100 bg-white shadow-sm scrollbar-none"
+        className="flex w-full overflow-x-auto snap-x snap-mandatory scroll-smooth rounded-2xl border border-gray-100 bg-white shadow-sm scrollbar-none touch-pan-x no-scrollbar"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         {images.map((image, idx) => (
@@ -67,20 +87,25 @@ export default function ProductImageCarousel({ images }: ImageCarouselProps) {
               alt={`Product preview image ${idx + 1}`}
               fill
               priority={idx === 0}
-              sizes="(max-w-768px) 100vw, 50vw"
-              className="object-cover object-center"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover object-center select-none pointer-events-none"
+              draggable="false"
             />
           </div>
         ))}
       </div>
 
-      {/* CAROUSEL POSITION DOTINDICATORS */}
+      {/* 🌸 DYNAMIC POSITION INDICATOR DOTS */}
       {images.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/10 backdrop-blur-xs px-2.5 py-1.5 rounded-full">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/10 backdrop-blur-xs px-2.5 py-1.5 rounded-full z-10">
           {images.map((_, idx) => (
             <span
               key={idx}
-              className="w-1.5 h-1.5 rounded-full bg-white odd:opacity-50 last:opacity-50"
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                idx === activeIndex
+                  ? "w-4 bg-[#D45C88]"
+                  : "w-1.5 bg-white opacity-60"
+              }`}
             />
           ))}
         </div>

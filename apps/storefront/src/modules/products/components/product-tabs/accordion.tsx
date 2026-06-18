@@ -1,3 +1,5 @@
+"use client"
+
 import { Text, clx } from "@modules/common/components/ui"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import React from "react"
@@ -47,36 +49,49 @@ const Item: React.FC<AccordionItemProps> = ({
     <AccordionPrimitive.Item
       {...props}
       className={clx(
-        "border-grey-20 group border-t last:mb-0 last:border-b",
-        "py-3",
+        "border-pink-100/40 border-t last:mb-0 last:border-b",
+        "py-1.5",
         className
       )}
     >
-      <AccordionPrimitive.Header className="px-1">
-        <div className="flex flex-col">
+      <AccordionPrimitive.Header className="w-full">
+        {/* 👑 CRITICAL TRIGGER WRAPOVERRE: Employs the full width line as hot-zone */}
+        <AccordionPrimitive.Trigger className="w-full flex flex-col pt-3 pb-3 text-left group outline-none focus:outline-none cursor-pointer">
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-4">
-              <Text className="text-ui-fg-subtle text-sm">{title}</Text>
+              {/* Premium HaveHer Style Typography Sync */}
+              <span className="text-xs md:text-sm font-semibold tracking-widest uppercase text-[#3A1A2A] group-hover:text-[#D45C88] transition-colors duration-200 font-sans">
+                {title}
+              </span>
             </div>
-            <AccordionPrimitive.Trigger>
+
+            {/* Action Icon representation */}
+            <div className="shrink-0 text-[#D45C88]">
               {customTrigger || <MorphingTrigger />}
-            </AccordionPrimitive.Trigger>
+            </div>
           </div>
+
           {subtitle && (
-            <Text as="span" className="mt-1 text-sm">
+            <Text
+              as="span"
+              className="mt-1 text-xs text-gray-400 font-sans font-normal"
+            >
               {subtitle}
             </Text>
           )}
-        </div>
+        </AccordionPrimitive.Trigger>
       </AccordionPrimitive.Header>
+
       <AccordionPrimitive.Content
         forceMount={forceMountContent}
         className={clx(
-          "radix-state-closed:animate-accordion-close radix-state-open:animate-accordion-open radix-state-closed:pointer-events-none px-1"
+          "radix-state-closed:animate-accordion-close radix-state-open:animate-accordion-open radix-state-closed:pointer-events-none"
         )}
       >
-        <div className="inter-base-regular group-radix-state-closed:animate-accordion-close">
-          {description && <Text>{description}</Text>}
+        <div className="w-full pb-4 px-0.5">
+          {description && (
+            <Text className="mb-2 text-gray-500">{description}</Text>
+          )}
           <div className="w-full">{children}</div>
         </div>
       </AccordionPrimitive.Content>
@@ -86,12 +101,17 @@ const Item: React.FC<AccordionItemProps> = ({
 
 Accordion.Item = Item
 
+/* =========================================================================
+   🌸 PREMIUM MORPHING INTERACTIVE INDICATOR (+ / - Cross)
+   ========================================================================= */
 const MorphingTrigger = () => {
   return (
-    <div className="text-grey-90 hover:bg-grey-5 active:bg-grey-5 active:text-violet-60 focus:border-violet-60 disabled:text-grey-30 bg-transparent disabled:bg-transparent rounded-rounded group relative p-[6px]">
-      <div className="h-5 w-5">
-        <span className="bg-grey-50 rounded-circle group-radix-state-open:rotate-90 absolute inset-y-[31.75%] left-[48%] right-1/2 w-[1.5px] duration-300" />
-        <span className="bg-grey-50 rounded-circle group-radix-state-open:rotate-90 group-radix-state-open:left-1/2 group-radix-state-open:right-1/2 absolute inset-x-[31.75%] top-[48%] bottom-1/2 h-[1.5px] duration-300" />
+    <div className="bg-transparent rounded-full group-hover:bg-[#FDF1F6] p-1.5 duration-200">
+      <div className="h-4 w-4 relative flex items-center justify-center">
+        {/* Vertical Vector Bone */}
+        <span className="bg-[#D45C88] rounded-full absolute h-3 w-[1.5px] duration-300 transform group-radix-state-open:rotate-90 group-radix-state-open:opacity-0" />
+        {/* Horizontal Vector Bone */}
+        <span className="bg-[#D45C88] rounded-full absolute w-3 h-[1.5px] duration-300 transform group-radix-state-open:rotate-180" />
       </div>
     </div>
   )

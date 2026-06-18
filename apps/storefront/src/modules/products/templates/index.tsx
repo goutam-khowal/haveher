@@ -1,7 +1,6 @@
 import React, { Suspense } from "react"
 
 import ProductActions from "@modules/products/components/product-actions"
-import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
 import ProductTabs from "@modules/products/components/product-tabs"
 import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
@@ -31,7 +30,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
   }
 
   // Formatting backend product media into safe parameters for the carousel item map
-  const carouselImages = images?.length 
+  const carouselImages = images?.length
     ? images.map((img) => ({ id: img.id || "", url: img.url || "" }))
     : [{ id: "thumb", url: product.thumbnail || "" }]
 
@@ -45,6 +44,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         {/* Responsive Order: Loaded 2nd on Mobile devices beneath product photos */}
         <div className="flex flex-col small:sticky small:top-36 order-2 small:order-1 w-full gap-y-6">
           <ProductInfo product={product} />
+          {/* 🌸 Real active brand tab is now fully authorized to occupy the slot */}
           <ProductTabs product={product} />
         </div>
 
@@ -57,7 +57,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
         {/* COLUMN 3: VARIANT BUTTONS & PURCHASE ACTIONS */}
         {/* Responsive Order: Loaded 3rd directly beneath description layout vectors */}
         <div className="flex flex-col small:sticky small:top-36 order-3 w-full gap-y-6 small:gap-y-8">
-          <ProductOnboardingCta />
+          {/* 🚀 DELETED THE DESTRUCTIVE <ProductOnboardingCta /> BLOCKS PERMANENTLY */}
           <Suspense
             fallback={
               <ProductActions

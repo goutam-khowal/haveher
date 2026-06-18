@@ -11,6 +11,9 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import ProductPrice from "../product-price"
 import MobileActions from "./mobile-actions"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner" // 🚀 Added for custom high-end toast bypass
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { clx } from "@modules/common/components/ui"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct
@@ -39,7 +42,6 @@ export default function ProductActions({
   const [isAdding, setIsAdding] = useState(false)
   const countryCode = useParams().countryCode as string
 
-  // If there is only 1 variant, preselect the options
   useEffect(() => {
     if (product.variants?.length === 1) {
       const variantOptions = optionsAsKeymap(product.variants[0].options)
@@ -58,7 +60,6 @@ export default function ProductActions({
     })
   }, [product.variants, options])
 
-  // update the options when a variant is selected
   const setOptionValue = (optionId: string, value: string) => {
     setOptions((prev) => ({
       ...prev,
@@ -66,7 +67,6 @@ export default function ProductActions({
     }))
   }
 
-  //check if the selected options produce a valid variant
   const isValidVariant = useMemo(() => {
     return product.variants?.some((v) => {
       const variantOptions = optionsAsKeymap(v.options)
@@ -91,7 +91,6 @@ export default function ProductActions({
     router.replace(pathname + "?" + params.toString())
   }, [selectedVariant, isValidVariant])
 
-  // check if the selected variant is in stock
   const inStock = useMemo(() => {
     if (selectedVariant && !selectedVariant.manage_inventory) {
       return true
@@ -111,22 +110,63 @@ export default function ProductActions({
   const actionsRef = useRef<HTMLDivElement>(null)
   const inView = useIntersection(actionsRef, "0px")
 
-  // add the selected variant to the cart
-  const handleAddToCart = async () => {
+  /* =========================================================================
+     🌸 UPGRADED CART TRIGGER WITH PREMIUM EMBEDDED TOAST SYNC
+     ========================================================================= */
+  const handleAddToCart = async (showNotification = true) => {
     if (!selectedVariant?.id) return null
 
     setIsAdding(true)
 
-    await addToCart({
-      variantId: selectedVariant.id,
-      quantity: 1,
-      countryCode,
-    })
+    try {
+      await addToCart({
+        variantId: selectedVariant.id,
+        quantity: 1,
+        countryCode,
+      })
 
-    setIsAdding(false)
+      // 👑 Dynamic Custom Toast Execution (Overriding ugly black box)
+      if (showNotification) {
+        toast.custom(
+          (t) => (
+            <div
+              className={clx(
+                "w-full max-w-sm bg-white border border-[#F0C4D8] p-4 rounded-full shadow-xl flex items-center justify-between gap-x-4 font-sans transition-all duration-300 transform",
+                t.visible
+                  ? "opacity-100 scale-100 translate-y-0"
+                  : "opacity-0 scale-95 translate-y-2"
+              )}
+            >
+              <div className="flex items-center gap-x-2 pl-3">
+                <span className="font-serif italic text-sm text-[#3A1A2A] font-medium">
+                  {product.title}
+                </span>
+                <span className="text-xs text-gray-500 font-sans tracking-wide">
+                  added to bag 🌸
+                </span>
+              </div>
+
+              <div className="flex items-center gap-x-2 shrink-0">
+                <LocalizedClientLink
+                  href="/cart"
+                  className="bg-[#D45C88] text-white text-[10px] font-semibold uppercase tracking-widest py-2 px-4 rounded-full transition-colors hover:bg-[#3A1A2A]"
+                  onClick={() => toast.dismiss(t.id)}
+                >
+                  View Bag
+                </LocalizedClientLink>
+              </div>
+            </div>
+          ),
+          { duration: 3500, position: "bottom-right" }
+        )
+      }
+    } catch (err) {
+      console.error("Failed to append item selection array context:", err)
+    } finally {
+      setIsAdding(false)
+    }
   }
 
-  // Helper boolean for disabled state
   const isButtonDisabled =
     !inStock || !selectedVariant || !!disabled || isAdding || !isValidVariant
 
@@ -163,9 +203,9 @@ export default function ProductActions({
         <div className="flex flex-col sm:flex-row gap-4 mt-2">
           {/* ADD TO BAG BUTTON */}
           <button
-            onClick={handleAddToCart}
+            onClick={() => handleAddToCart(true)}
             disabled={isButtonDisabled}
-            className="flex-1 px-6 py-4 rounded-full border-2 border-berry-primary bg-white text-berry-primary font-bold tracking-wide hover:bg-berry-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="flex-1 px-6 py-4 rounded-full border-2 border-berry-primary bg-white text-berry-primary font-bold tracking-wide hover:bg-berry-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
             data-testid="add-product-button"
           >
             {isAdding ? (
@@ -179,17 +219,18 @@ export default function ProductActions({
             )}
           </button>
 
-          {/* BUY NOW BUTTON */}
+          {/* BUY NOW BUTTON - STABLE REDIRECTION FLOW */}
           <button
             onClick={async () => {
-              await handleAddToCart()
-              // Redirect straight to checkout after adding to cart
+              if (isButtonDisabled) return
+              // Pass false to skip toast alert since we are redirecting straight away
+              await handleAddToCart(false)
               if (selectedVariant?.id && inStock) {
-                router.push(`/${countryCode}/checkout?step=address`)
+                router.push(`/${countryCode}/checkout`)
               }
             }}
             disabled={isButtonDisabled}
-            className="flex-1 px-6 py-4 rounded-full border-2 border-berry-primary bg-berry-primary text-white font-bold tracking-wide hover:bg-berry-dark hover:border-berry-dark shadow-lg shadow-berry-primary/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="flex-1 px-6 py-4 rounded-full border-2 border-berry-primary bg-berry-primary text-white font-bold tracking-wide hover:bg-berry-dark hover:border-berry-dark shadow-lg shadow-berry-primary/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
           >
             {isAdding ? (
               <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -206,7 +247,7 @@ export default function ProductActions({
           options={options}
           updateOptions={setOptionValue}
           inStock={inStock}
-          handleAddToCart={handleAddToCart}
+          handleAddToCart={() => handleAddToCart(true)}
           isAdding={isAdding}
           show={!inView}
           optionsDisabled={!!disabled || isAdding}

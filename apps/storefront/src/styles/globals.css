@@ -1,3 +1,9 @@
+/* =========================================================================
+   👑 LUXURY TYPOGRAPHY & DESIGN SYSTEM (Google Fonts Import)
+   Must precede all other rules to prevent Next.js/Turbopack build failures.
+   ========================================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
+
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
@@ -13,13 +19,15 @@
   }
 
   body {
-    @apply text-gray-800 bg-white antialiased;
+    /* Clean tracking-wide Montserrat for premium UI readability */
+    font-family: 'Montserrat', sans-serif !important;
+    @apply text-gray-800 bg-white antialiased tracking-wide;
   }
 }
 
 @layer utilities {
 
-  /* Chrome, Safari and Opera */
+  /* Chrome, Safari and Opera - Hides native scrollbar layout */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -75,59 +83,158 @@
 
   /* Updated to use your brand theme instead of harsh black */
   .contrast-btn {
-    @apply px-4 py-2 border border-[#D45C88] text-[#D45C88] rounded-full hover:bg-[#D45C88] hover:text-white transition-colors duration-200 ease-in;
+    font-family: 'Montserrat', sans-serif;
+    @apply px-5 py-2.5 border border-[#D45C88] text-[#D45C88] text-xs font-medium uppercase tracking-widest rounded-full hover:bg-[#D45C88] hover:text-white transition-colors duration-200 ease-in;
   }
 
-  /* Keep all Medusa Typography defaults so the rest of the UI doesn't break */
+  /* =========================================================================
+     💎 LUXURY TYPOGRAPHY ENGINE (Medusa Safe Custom Mapping)
+     - Titles & Headings utilize Editorial Serif (Bodoni Moda - Tanirah Vibe)
+     - System UI, Pricing & Forms utilize Balanced Sans-Serif (Montserrat - Chapters Vibe)
+     ========================================================================= */
+
   .text-xsmall-regular {
-    @apply text-[10px] leading-4 font-normal;
+    font-family: 'Montserrat', sans-serif;
+    @apply text-[10px] leading-4 font-normal tracking-wider;
   }
 
   .text-small-regular {
-    @apply text-xs leading-5 font-normal;
+    font-family: 'Montserrat', sans-serif;
+    @apply text-xs leading-5 font-normal tracking-wide;
   }
 
   .text-small-semi {
-    @apply text-xs leading-5 font-semibold;
+    font-family: 'Montserrat', sans-serif;
+    @apply text-xs leading-5 font-semibold tracking-wider uppercase;
   }
 
   .text-base-regular {
-    @apply text-sm leading-6 font-normal;
+    font-family: 'Montserrat', sans-serif;
+    @apply text-sm leading-6 font-normal tracking-wide;
   }
 
   .text-base-semi {
-    @apply text-sm leading-6 font-semibold;
+    font-family: 'Montserrat', sans-serif;
+    @apply text-sm leading-6 font-semibold tracking-wide;
   }
 
+  /* Large and Up map to High-End Editorial Serif (Tanirah Vibe) */
   .text-large-regular {
-    @apply text-base leading-6 font-normal;
+    font-family: 'Bodoni Moda', serif;
+    @apply text-base leading-6 font-normal tracking-wide;
   }
 
   .text-large-semi {
-    @apply text-base leading-6 font-semibold;
+    font-family: 'Bodoni Moda', serif;
+    @apply text-base leading-7 font-medium tracking-wide;
   }
 
   .text-xl-regular {
-    @apply text-2xl leading-[36px] font-normal;
+    font-family: 'Bodoni Moda', serif;
+    @apply text-xl md:text-2xl leading-[36px] font-normal italic;
   }
 
   .text-xl-semi {
-    @apply text-2xl leading-[36px] font-semibold;
+    font-family: 'Bodoni Moda', serif;
+    @apply text-xl md:text-2xl leading-[36px] font-semibold uppercase tracking-wider;
   }
 
   .text-2xl-regular {
-    @apply text-[30px] leading-[48px] font-normal;
+    font-family: 'Bodoni Moda', serif;
+    @apply text-[26px] md:text-[30px] leading-[40px] md:leading-[48px] font-normal;
   }
 
   .text-2xl-semi {
-    @apply text-[30px] leading-[48px] font-semibold;
+    font-family: 'Bodoni Moda', serif;
+    @apply text-[26px] md:text-[30px] leading-[40px] md:leading-[48px] font-semibold uppercase tracking-wider;
   }
 
   .text-3xl-regular {
-    @apply text-[32px] leading-[44px] font-normal;
+    font-family: 'Bodoni Moda', serif;
+    @apply text-[28px] md:text-[32px] leading-[38px] md:leading-[44px] font-normal;
   }
 
   .text-3xl-semi {
-    @apply text-[32px] leading-[44px] font-semibold;
+    font-family: 'Bodoni Moda', serif;
+    @apply text-[28px] md:text-[32px] leading-[38px] md:leading-[44px] font-bold uppercase tracking-widest;
   }
+}
+
+/* =========================================================================
+   🚨 ANTI-BLACK TOAST OVERRIDE ENGINE (BYPASS LAYER CRITICAL FIX)
+   Forcefully intercepting Medusa UI Core preset layouts directly in the browser
+   ========================================================================= */
+
+/* 1. Target the notification bar root container */
+div[role="status"],
+[data-sonner-toast],
+div[class*="fixed"][class*="bg-neutral-900"],
+div[class*="fixed"][class*="bg-black"] {
+  background-color: #ffffff !important;
+  border: 1px solid #F0C4D8 !important;
+  /* Elegant Haveher soft pink border line */
+  color: #3A1A2A !important;
+  /* Branded velvet maroon text weight */
+  box-shadow: 0 10px 30px -10px rgba(212, 92, 136, 0.2) !important;
+  border-radius: 9999px !important;
+  /* Gorgeous capsule pill layout transformation */
+  padding: 12px 24px !important;
+}
+
+/* 2. Overhaul text labels inside the container layout */
+div[role="status"] *,
+[data-sonner-toast] *,
+div[class*="bg-neutral-900"] * {
+  color: #3A1A2A !important;
+  font-family: 'Montserrat', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* 3. Hide the hardcoded Next.js/Native default loader loop circle graphics */
+div[role="status"] svg,
+[data-sonner-toast] svg {
+  stroke: #D45C88 !important;
+  fill: transparent !important;
+}
+
+/* 4. Transform standard close buttons or inner action anchor nodes */
+div[role="status"] button,
+[data-sonner-toast] button,
+div[role="status"] a {
+  background-color: #D45C88 !important;
+  color: #ffffff !important;
+  border-radius: 9999px !important;
+  padding: 6px 14px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+/* =========================================================================
+   👑 CHAMELEON TEXT CONTEXT REPLACEMENT (CSS PSEUDO HACK)
+   Automatically forces "Add to cart" string to mask as "Item added to bag 🌸"
+   ========================================================================= */
+div[role="status"] span,
+[data-sonner-toast] [class*="title"],
+div[class*="bg-neutral-900"] span {
+  visibility: hidden !important;
+  position: relative !important;
+}
+
+div[role="status"] span::after,
+[data-sonner-toast] [class*="title"]::after,
+div[class*="bg-neutral-900"] span::after {
+  content: "Item added to bag 🌸" !important;
+  visibility: visible !important;
+  position: absolute !important;
+  left: 0;
+  top: 0;
+  white-space: nowrap !important;
+  color: #3A1A2A !important;
+  font-weight: 500 !important;
 }
