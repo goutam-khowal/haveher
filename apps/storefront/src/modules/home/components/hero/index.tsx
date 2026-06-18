@@ -92,21 +92,8 @@ const Hero = async () => {
               />
             </div>
           </Link>
-          <div className="absolute top-6 right-6 bg-berry-accent text-white font-bold px-4 py-2 rounded-full transform rotate-3 shadow-md">
-            Freshly Baked
-          </div>
         </div>
-      </section>
-
-      {/* 2. PROMOTIONAL BANNER */}
-      {/* <section className="w-full bg-gradient-to-r from-berry-dark to-berry-primary py-8 px-4 text-center shadow-inner">
-        <p className="font-serif text-white text-xl md:text-2xl mb-4 italic">
-          Elevate your wardrobe. Use code at checkout:
-        </p>
-        <div className="inline-block border-2 border-dashed border-white/50 bg-white/10 px-8 py-3 rounded-full text-white font-bold tracking-widest text-lg md:text-xl">
-          HAVEHER
-        </div>
-      </section> */}
+      </section>{" "}
     </div>
   )
 }
