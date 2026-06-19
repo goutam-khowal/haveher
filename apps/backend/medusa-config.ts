@@ -84,7 +84,7 @@
 // });
 import { loadEnv, defineConfig, Modules } from "@medusajs/framework/utils";
 
-loadEnv(process.env.NODE_ENV || "development", process.cwd());
+loadEnv(process.env.NODE_ENV || "production", process.cwd());
 
 module.exports = defineConfig({
   projectConfig: {
@@ -99,7 +99,6 @@ module.exports = defineConfig({
         process.env.COOKIE_SECRET || "supersecret_haveher_cookie_secret",
     },
   },
-
 
   admin: {
     disable: false,
