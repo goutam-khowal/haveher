@@ -149,12 +149,6 @@ module.exports = defineConfig({
       resolve: "@medusajs/payment",
       options: {
         providers: [
-          // 👑 CASH ON DELIVERY (MANUAL PROVIDER) LOCKED IN HERE
-          {
-            resolve: "@medusajs/payment",
-            id: "manual",
-            options: {},
-          },
           // Razorpay Provider 1
           {
             resolve: "@devx-commerce/razorpay/providers/payment-razorpay",
