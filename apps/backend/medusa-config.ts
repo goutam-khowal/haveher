@@ -151,7 +151,7 @@ module.exports = defineConfig({
         providers: [
           // 👑 CASH ON DELIVERY (MANUAL PROVIDER) LOCKED IN HERE
           {
-            resolve: "@medusajs/payment-manual",
+            resolve: "@medusajs/payment",
             id: "manual",
             options: {},
           },
