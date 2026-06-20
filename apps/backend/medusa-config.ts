@@ -1,23 +1,30 @@
-// import { loadEnv, defineConfig, Modules } from "@medusajs/framework/utils";
+// const { loadEnv, defineConfig, Modules } = require("@medusajs/framework/utils");
 
-// loadEnv(process.env.NODE_ENV || "development", process.cwd());
+// // Enforce explicit production context compilation
+// loadEnv(process.env.NODE_ENV || "production", process.cwd());
 
 // module.exports = defineConfig({
 //   projectConfig: {
 //     databaseUrl: process.env.DATABASE_URL,
 //     redisUrl: process.env.REDIS_URL,
 //     http: {
-//       storeCors: process.env.STORE_CORS!,
-//       adminCors: process.env.ADMIN_CORS!,
-//       authCors: process.env.AUTH_CORS!,
+//       storeCors: process.env.STORE_CORS,
+//       adminCors: process.env.ADMIN_CORS,
+//       authCors: process.env.AUTH_CORS,
 //       jwtSecret: process.env.JWT_SECRET || "supersecret_haveher_secret",
 //       cookieSecret:
 //         process.env.COOKIE_SECRET || "supersecret_haveher_cookie_secret",
 //     },
 //   },
+
+//   // 👑 FIXED: Medusa v2 Framework Native Routing Structure
 //   admin: {
-//     disable: process.env.NODE_ENV === "production",
+//     disable: false,
+//     path: "/app",
+//     backendUrl:
+//       process.env.MEDUSA_BACKEND_URL || "https://haveher-backend.onrender.com",
 //   },
+
 //   modules: {
 //     [Modules.EVENT_BUS]: {
 //       resolve: "@medusajs/event-bus-redis",
@@ -96,15 +103,17 @@ module.exports = defineConfig({
       adminCors: process.env.ADMIN_CORS,
       authCors: process.env.AUTH_CORS,
       jwtSecret: process.env.JWT_SECRET || "supersecret_haveher_secret",
-      cookieSecret: process.env.COOKIE_SECRET || "supersecret_haveher_cookie_secret",
+      cookieSecret:
+        process.env.COOKIE_SECRET || "supersecret_haveher_cookie_secret",
     },
   },
 
   // 👑 FIXED: Medusa v2 Framework Native Routing Structure
   admin: {
-    disable: false, 
+    disable: false,
     path: "/app",
-    backendUrl: process.env.MEDUSA_BACKEND_URL || "https://haveher-backend.onrender.com",
+    backendUrl:
+      process.env.MEDUSA_BACKEND_URL || "https://haveher-backend.onrender.com",
   },
 
   modules: {
@@ -140,23 +149,37 @@ module.exports = defineConfig({
       resolve: "@medusajs/payment",
       options: {
         providers: [
+          // 👑 CASH ON DELIVERY (MANUAL PROVIDER) LOCKED IN HERE
+          {
+            resolve: "@medusajs/payment-manual",
+            id: "manual",
+            options: {},
+          },
+          // Razorpay Provider 1
           {
             resolve: "@devx-commerce/razorpay/providers/payment-razorpay",
             id: "razorpay",
             options: {
               key_id: process.env.RAZORPAY_ID || "rzp_test_T32p4x9a5fuR4e",
-              key_secret: process.env.RAZORPAY_SECRET || "zN2ujmPYkMkfAwhYqaUHms7y",
-              webhook_secret: process.env.RAZORPAY_WEBHOOK_SECRET || "haveher_super_secret_webhook_string",
+              key_secret:
+                process.env.RAZORPAY_SECRET || "zN2ujmPYkMkfAwhYqaUHms7y",
+              webhook_secret:
+                process.env.RAZORPAY_WEBHOOK_SECRET ||
+                "haveher_super_secret_webhook_string",
               auto_capture: true,
             },
           },
+          // Razorpay Provider 2
           {
             resolve: "@devx-commerce/razorpay/providers/payment-razorpay",
             id: "pp_razorpay_razorpay",
             options: {
               key_id: process.env.RAZORPAY_ID || "rzp_test_T32p4x9a5fuR4e",
-              key_secret: process.env.RAZORPAY_SECRET || "zN2ujmPYkMkfAwhYqaUHms7y",
-              webhook_secret: process.env.RAZORPAY_WEBHOOK_SECRET || "haveher_super_secret_webhook_string",
+              key_secret:
+                process.env.RAZORPAY_SECRET || "zN2ujmPYkMkfAwhYqaUHms7y",
+              webhook_secret:
+                process.env.RAZORPAY_WEBHOOK_SECRET ||
+                "haveher_super_secret_webhook_string",
               auto_capture: true,
             },
           },
