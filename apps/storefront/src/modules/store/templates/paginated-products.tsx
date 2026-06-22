@@ -12,6 +12,7 @@ type PaginatedProductsParams = {
   category_id?: string[]
   id?: string[]
   order?: string
+  region_id?: string // 👑 Type define kar do taaki TS error na de
 }
 
 export default async function PaginatedProducts({
@@ -49,12 +50,17 @@ export default async function PaginatedProducts({
     queryParams["order"] = "created_at"
   }
 
+  // 1. Pehle region fetch hoga
   const region = await getRegion(countryCode)
 
   if (!region) {
     return null
   }
 
+  // 👑 FIXED: Backend ko fetch karte waqt batao ki kis region ki Price List lagani hai
+  queryParams["region_id"] = region.id
+
+  // 2. Ab calculated prices ke sath products load honge
   const {
     response: { products, count },
   } = await listProductsWithSort({
