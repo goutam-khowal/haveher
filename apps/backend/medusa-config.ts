@@ -192,9 +192,9 @@ module.exports = defineConfig({
     databaseUrl: process.env.DATABASE_URL,
     redisUrl: process.env.REDIS_URL,
     http: {
-      storeCors: process.env.STORE_CORS,
-      adminCors: process.env.ADMIN_CORS,
-      authCors: process.env.AUTH_CORS,
+      storeCors: process.env.STORE_CORS || "http://localhost:8000",
+      adminCors: process.env.ADMIN_CORS || "https://haveher.onrender.com",
+      authCors: process.env.AUTH_CORS || "https://haveher.onrender.com",
       jwtSecret: process.env.JWT_SECRET || "supersecret_haveher_secret",
       cookieSecret:
         process.env.COOKIE_SECRET || "supersecret_haveher_cookie_secret",
