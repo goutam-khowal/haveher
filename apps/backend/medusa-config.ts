@@ -242,13 +242,7 @@ module.exports = defineConfig({
       resolve: "@medusajs/payment",
       options: {
         providers: [
-          // 👑 CASH ON DELIVERY (NATIVE MANUAL PROVIDER) ACCESSED SAFELY
-          {
-            resolve: "@medusajs/payment",
-            id: "manual",
-            options: {},
-          },
-          // Razorpay Provider 1
+          // 👑 CORE RAZORPAY PROVIDERS ONLY
           {
             resolve: "@devx-commerce/razorpay/providers/payment-razorpay",
             id: "razorpay",
@@ -262,7 +256,6 @@ module.exports = defineConfig({
               auto_capture: true,
             },
           },
-          // Razorpay Provider 2
           {
             resolve: "@devx-commerce/razorpay/providers/payment-razorpay",
             id: "pp_razorpay_razorpay",
