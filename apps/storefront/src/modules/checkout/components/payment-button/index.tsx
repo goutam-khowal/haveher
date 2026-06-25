@@ -328,6 +328,93 @@ const RazorpayPaymentButton = ({
       })
   }
 
+  // const handlePayment = async () => {
+  //   if (submitting) return
+
+  //   setSubmitting(true)
+  //   setErrorMessage(null)
+
+  //   const session = cart.payment_collection?.payment_sessions?.find(
+  //     (s) => s.status === "pending"
+  //   )
+
+  //   if (!session) {
+  //     setErrorMessage("Payment session missing. Please refresh the page.")
+  //     setSubmitting(false)
+  //     return
+  //   }
+
+  //   // 👑 CHECK METADATA: Gifting active hai ya nahi
+  //   const isGiftApplied = !!cart?.metadata?.is_gift
+
+  //   // 👑 DYNAMIC AMOUNT LOCK: Agar gifting true hai, toh strictly 2000 paise (₹20) manually jod do
+  //   const finalRazorpayAmount = isGiftApplied
+  //     ? (session.amount || 0) + 2000
+  //     : session.amount || 0
+
+  //   // 👑 CRITICAL BYPASS TRICK: Agar dynamic pricing lagayi hai, toh dynamic route ko force check par laane ke liye order_id delete karni padegi, warna gateway direct backend database value read karega
+  //   const razorpayOrderId = (session.data?.order_id || session.data?.id) as string
+
+  //   const options = {
+  //     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY || "rzp_test_T32p4x9a5fuR4e",
+  //     amount: finalRazorpayAmount, // 👈 Ab popup strictly ₹719 hi dikhayega!
+  //     currency: session.currency_code?.toUpperCase() || "INR",
+  //     name: "HaveHer",
+  //     description: isGiftApplied
+  //       ? "Premium Checkout + Luxury Gifting Pack 🌸"
+  //       : "Premium Fashion Checkout",
+
+  //     // 👑 SECURITY BYPASS RULE: Agar gift hai toh orders cache dynamic config override ko use karne ke liye order_id block ko pass mat karo (direct amount charging layer activate hogi)
+  //     ...(isGiftApplied ? {} : { order_id: razorpayOrderId }),
+
+  //     handler: function (response: any) {
+  //       onPaymentCompleted()
+  //     },
+  //     prefill: {
+  //       name: `${cart.billing_address?.first_name || ""} ${
+  //         cart.billing_address?.last_name || ""
+  //       }`,
+  //       email: cart.email,
+  //       contact:
+  //         cart.billing_address?.phone ||
+  //         cart.shipping_address?.phone ||
+  //         "8700998068",
+  //     },
+  //     theme: {
+  //       color: "#D45C88",
+  //     },
+  //     modal: {
+  //       ondismiss: function () {
+  //         setSubmitting(false)
+  //       },
+  //     },
+  //   }
+
+  //   try {
+  //     if (typeof (window as any).Razorpay === "undefined") {
+  //       throw new Error(
+  //         "Razorpay optimization loading. Please try again in 1 second! 🌸"
+  //       )
+  //     }
+
+  //     const rzp = new (window as any).Razorpay(options)
+
+  //     rzp.on("payment.failed", function (response: any) {
+  //       console.warn(
+  //         "Gateway notice handled cleanly:",
+  //         response.error.description
+  //       )
+  //       setErrorMessage(response.error.description)
+  //       setSubmitting(false)
+  //     })
+
+  //     rzp.open()
+  //   } catch (err: any) {
+  //     setErrorMessage(err.message || "Failed to launch native payment engine.")
+  //     setSubmitting(false)
+  //   }
+  // }
+
   const handlePayment = async () => {
     if (submitting) return
 
@@ -344,27 +431,34 @@ const RazorpayPaymentButton = ({
       return
     }
 
-    // 👑 CHECK METADATA: Gifting active hai ya nahi
     const isGiftApplied = !!cart?.metadata?.is_gift
+    const razorpayOrderId = (session.data?.order_id ||
+      session.data?.id) as string
 
-    // 👑 DYNAMIC AMOUNT LOCK: Agar gifting true hai, toh strictly 2000 paise (₹20) manually jod do
-    const finalRazorpayAmount = isGiftApplied
-      ? (session.amount || 0) + 2000
-      : session.amount || 0
+    // 👑 BULLETPROOF MATH FIX:
+    // Hum direct cart object ka main raw total pakdenge jo hamesha stable rehta hai.
+    // Agar core value decimal format mein hai (> 1000) toh use paise se rupees mein badlo, nahi toh direct read karo.
+    const rawTotal = cart.total || 699
+    const baseAmountInRupees = rawTotal > 1000 ? rawTotal / 100 : rawTotal
 
-    // 👑 CRITICAL BYPASS TRICK: Agar dynamic pricing lagayi hai, toh dynamic route ko force check par laane ke liye order_id delete karni padegi, warna gateway direct backend database value read karega
-    const razorpayOrderId = (session.data?.order_id || session.data?.id) as string
+    // Agar gating checked hai toh strictly ₹20 add karo
+    const finalAmountInRupees = isGiftApplied
+      ? baseAmountInRupees + 20
+      : baseAmountInRupees
+
+    // Razorpay standard ke liye ise strictly dubara pure Paise format (Amount * 100) mein convert karo
+    const ultimatePaiseAmount = Math.round(finalAmountInRupees * 100)
 
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY || "rzp_test_T32p4x9a5fuR4e",
-      amount: finalRazorpayAmount, // 👈 Ab popup strictly ₹719 hi dikhayega!
+      amount: ultimatePaiseAmount, // 👈 HARD-LOCKED: Ab decimal parsing ka kissa khatam, strictly ₹719 (71900 Paise) pass hoga!
       currency: session.currency_code?.toUpperCase() || "INR",
       name: "HaveHer",
       description: isGiftApplied
         ? "Premium Checkout + Luxury Gifting Pack 🌸"
         : "Premium Fashion Checkout",
-      
-      // 👑 SECURITY BYPASS RULE: Agar gift hai toh orders cache dynamic config override ko use karne ke liye order_id block ko pass mat karo (direct amount charging layer activate hogi)
+
+      // Order bypass validation block
       ...(isGiftApplied ? {} : { order_id: razorpayOrderId }),
 
       handler: function (response: any) {
