@@ -130,11 +130,12 @@ const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
   const { currency_code, total, item_subtotal, discount_subtotal, metadata } =
     totals
 
-  // 👑 CHECK: Kya cart metadata mein gifting selected hai?
+  // 👑 STRICT MATHEMATICAL ACCURACY OVERRIDE
   const isGiftApplied = !!metadata?.is_gift
 
-  // 👑 OVERRIDE PARSING: UI level calculations mapping
-  const finalTotal = isGiftApplied ? (total || 0) + 20 : total || 0
+  // Agar display par subtotal aur total match ho rahe hain tabhi ₹20 add karo, warna absolute standard check lagao
+  const finalTotal =
+    isGiftApplied && total === item_subtotal ? (total || 0) + 20 : total || 0
 
   return (
     <div className="w-full font-sans text-[#3A1A2A]">
