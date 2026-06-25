@@ -56,8 +56,7 @@
 "use client"
 
 import React, { useState, useTransition } from "react"
-import { toggleCartGifting } from "@lib/data/cart-actions" // 👈 Apna path match kar lena bhai
-
+import { toggleCartGifting } from "@lib/data/cart"
 type GiftingOptionProps = {
   cart: any
 }
