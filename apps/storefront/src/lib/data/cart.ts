@@ -518,3 +518,32 @@ export async function listCartOptions() {
     cache: "force-cache",
   })
 }
+
+//
+
+// 👑 NEXT.JS SERVER ACTION: Cart Metadata Update logic toggle karne ke liye
+export async function toggleCartGifting(isGift: boolean, message: string = "") {
+  const cartId = await getCartId()
+  if (!cartId) throw new Error("Cart not found")
+
+  const headers = { ...(await getAuthHeaders()) }
+
+  // Medusa v2 standard implementation: Updates dynamic context fields inside metadata
+  return sdk.store.cart
+    .update(
+      cartId,
+      {
+        metadata: {
+          is_gift: isGift,
+          gift_message: isGift ? message : "",
+        },
+      },
+      {},
+      headers
+    )
+    .then(async () => {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag) // Isse total summary aur calculations instant refresh ho jayengi
+    })
+    .catch(medusaError)
+}
