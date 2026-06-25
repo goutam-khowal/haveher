@@ -274,6 +274,9 @@ const Payment = ({
   const setPaymentMethod = async (method: string) => {
     setError(null)
     setSelectedPaymentMethod(method)
+
+    const isGift = !!cart?.metadata?.is_gift
+
     try {
       await initiatePaymentSession(cart, {
         provider_id: method,
@@ -283,6 +286,8 @@ const Payment = ({
             cart_id: cart.id,
             customer_email: cart.email,
             customer_phone: cart.billing_address?.phone || "8700998068",
+            is_giftcard: false,
+            gift_charge_override: isGift ? 2000 : 0,
           },
         },
       })
@@ -296,6 +301,8 @@ const Payment = ({
       selectedPaymentMethod || availablePaymentMethods?.[0]?.id || "razorpay"
     setIsLoading(true)
     setError(null)
+
+    const isGift = !!cart?.metadata?.is_gift
     try {
       const isBothRazorpay =
         activeSession?.provider_id?.includes("razorpay") &&
@@ -312,6 +319,8 @@ const Payment = ({
               cart_id: cart.id,
               customer_email: cart.email,
               customer_phone: cart.billing_address?.phone || "8700998068",
+              is_giftcard: false,
+              gift_charge_override: isGift ? 2000 : 0,
             },
           },
         })

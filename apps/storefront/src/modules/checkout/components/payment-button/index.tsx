@@ -187,6 +187,125 @@ const ManualTestPaymentButton = ({
   )
 }
 
+// const RazorpayPaymentButton = ({
+//   cart,
+//   notReady,
+//   "data-testid": dataTestId,
+// }: {
+//   cart: HttpTypes.StoreCart
+//   notReady: boolean
+//   "data-testid"?: string
+// }) => {
+//   const [submitting, setSubmitting] = useState(false)
+//   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+//   const onPaymentCompleted = async () => {
+//     await placeOrder()
+//       .catch((err) => {
+//         setErrorMessage(err.message)
+//       })
+//       .finally(() => {
+//         setSubmitting(false)
+//       })
+//   }
+
+//   const handlePayment = async () => {
+//     if (submitting) return
+
+//     setSubmitting(true)
+//     setErrorMessage(null)
+
+//     const session = cart.payment_collection?.payment_sessions?.find(
+//       (s) => s.status === "pending"
+//     )
+
+//     if (!session) {
+//       setErrorMessage("Payment session missing. Please refresh the page.")
+//       setSubmitting(false)
+//       return
+//     }
+
+//     const options = {
+//       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY || "rzp_test_T32p4x9a5fuR4e",
+//       amount: session.amount,
+//       currency: session.currency_code?.toUpperCase() || "INR",
+//       name: "HaveHer",
+//       description: "Premium Fashion Checkout",
+//       order_id: (session.data?.order_id || session.data?.id) as string,
+
+//       // 👑 FIXED CALLBACK HANDLER: Bypasses strict runtime block validation checks safely
+//       handler: function (response: any) {
+//         onPaymentCompleted()
+//       },
+//       prefill: {
+//         name: `${cart.billing_address?.first_name || ""} ${
+//           cart.billing_address?.last_name || ""
+//         }`,
+//         email: cart.email,
+//         contact:
+//           cart.billing_address?.phone ||
+//           cart.shipping_address?.phone ||
+//           "8700998068",
+//       },
+//       theme: {
+//         color: "#D45C88",
+//       },
+//       modal: {
+//         ondismiss: function () {
+//           setSubmitting(false)
+//         },
+//       },
+//     }
+
+//     try {
+//       if (typeof (window as any).Razorpay === "undefined") {
+//         throw new Error(
+//           "Razorpay optimization loading. Please try again in 1 second! 🌸"
+//         )
+//       }
+
+//       const rzp = new (window as any).Razorpay(options)
+
+//       // 👑 OVERRIDE FAILURE HOOKS: Silencing browser alert loops entirely during runtime testing
+//       rzp.on("payment.failed", function (response: any) {
+//         console.warn(
+//           "Gateway notice handled cleanly:",
+//           response.error.description
+//         )
+//         setErrorMessage(response.error.description)
+//         setSubmitting(false)
+//       })
+
+//       rzp.open()
+//     } catch (err: any) {
+//       setErrorMessage(err.message || "Failed to launch native payment engine.")
+//       setSubmitting(false)
+//     }
+//   }
+
+//   return (
+//     <div className="w-full flex flex-col gap-y-2">
+//       {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+//       <script src="https://checkout.razorpay.com/v1/checkout.js" async />
+//       <Button
+//         disabled={notReady || submitting}
+//         onClick={handlePayment}
+//         isLoading={submitting}
+//         data-testid={dataTestId}
+//         className="w-full bg-[#3A1A2A] hover:bg-[#D45C88] text-white text-xs font-bold uppercase tracking-widest h-12 rounded-full transition-all cursor-pointer flex items-center justify-center shadow-md"
+//       >
+//         {submitting ? "Opening Razorpay..." : "Pay with Razorpay 🌸"}
+//       </Button>
+//       {errorMessage && (
+//         <ErrorMessage
+//           error={errorMessage}
+//           data-testid="razorpay-payment-error-message"
+//         />
+//       )}
+//     </div>
+//   )
+// }
+
 const RazorpayPaymentButton = ({
   cart,
   notReady,
@@ -225,12 +344,22 @@ const RazorpayPaymentButton = ({
       return
     }
 
+    // 👑 CHECK METADATA: Gifting active hai ya nahi
+    const isGiftApplied = !!cart?.metadata?.is_gift
+
+    // 👑 DYNAMIC AMOUNT LOCK: Agar gifting true hai, toh session amount mein 2000 paise (₹20) manually jod do
+    const finalRazorpayAmount = isGiftApplied
+      ? (session.amount || 0) + 2000
+      : session.amount || 0
+
     const options = {
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY || "rzp_test_T32p4x9a5fuR4e",
-      amount: session.amount,
+      amount: finalRazorpayAmount, // 👈 FIXED: Ab Razorpay Popup Window par exact ₹20 badh kar amount khulega!
       currency: session.currency_code?.toUpperCase() || "INR",
       name: "HaveHer",
-      description: "Premium Fashion Checkout",
+      description: isGiftApplied
+        ? "Premium Checkout + Luxury Gifting Pack 🌸"
+        : "Premium Fashion Checkout",
       order_id: (session.data?.order_id || session.data?.id) as string,
 
       // 👑 FIXED CALLBACK HANDLER: Bypasses strict runtime block validation checks safely
